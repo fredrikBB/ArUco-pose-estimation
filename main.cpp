@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <opencv2/opencv.hpp>
 
+#include "camera_parameters.h"
+
 using namespace cv;
 
 int main(int argc, char** argv )
@@ -20,23 +22,18 @@ int main(int argc, char** argv )
         return -1;
     }
 
-    // ArUco detection
+    /**************************************************************************************/
+    /************************************ArUco Detection***********************************/
+    /**************************************************************************************/
+
     std::vector<int> markerIds;
     std::vector<std::vector<cv::Point2f>> markerCorners, rejectedCandidates;
     cv::aruco::DetectorParameters detectorParams = cv::aruco::DetectorParameters();
     cv::aruco::Dictionary dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_6X6_50);
     cv::aruco::ArucoDetector detector(dictionary, detectorParams);
+
+    // ArUco detection
     detector.detectMarkers(InputImage, markerCorners, markerIds, rejectedCandidates);
-
-    // Draw results
-    if (markerIds.size() > 0)
-        cv::aruco::drawDetectedMarkers(InputImage, markerCorners, markerIds);
-    else
-        std::cout << "No markers detected" << std::endl;
-
-    // Show image
-    cv::namedWindow("Detected markers", cv::WINDOW_NORMAL);
-    imshow("Detected markers", InputImage);
 
     // Print out detected marker ids sorted
     std::sort(markerIds.begin(), markerIds.end());
@@ -45,6 +42,44 @@ int main(int argc, char** argv )
         std::cout << i << " ";
     std::cout << std::endl;
     std::cout << "Number of detected markers: " << markerIds.size() << std::endl;
+
+    /**************************************************************************************/
+    /************************************Pose Estimation***********************************/
+    /**************************************************************************************/
+
+    float markerLength = 26.41f; // Marker side length in mm
+    Mat cameraMatrix = OnePlus11CameraMatrix;
+    Mat distCoeffs = OnePlus11DistCoeffs;
+    std::vector<Vec3d> rvecs(markerIds.size()); // Rotation vectors
+    std::vector<Vec3d> tvecs(markerIds.size()); // Translation vectors
+
+    // set coordinate system
+    cv::Mat objPoints(4, 1, CV_32FC3);
+    objPoints.ptr<Vec3f>(0)[0] = Vec3f(-markerLength/2.f, markerLength/2.f, 0);
+    objPoints.ptr<Vec3f>(0)[1] = Vec3f(markerLength/2.f, markerLength/2.f, 0);
+    objPoints.ptr<Vec3f>(0)[2] = Vec3f(markerLength/2.f, -markerLength/2.f, 0);
+    objPoints.ptr<Vec3f>(0)[3] = Vec3f(-markerLength/2.f, -markerLength/2.f, 0);
+
+    // Estimate pose for each detected marker
+    for (size_t i = 0; i < markerIds.size(); i++) {
+        cv::solvePnP(objPoints, markerCorners.at(i), cameraMatrix, distCoeffs, rvecs[i], tvecs[i]);
+    }
+
+    // Print out pose estimation results
+    for (size_t i = 0; i < markerIds.size(); i++) {
+        std::cout << "Rotation Vector: [" << rvecs[i][0] << ", " << rvecs[i][1] << ", " << rvecs[i][2] << "]" << std::endl;
+        std::cout << "Translation Vector: [" << tvecs[i][0] << ", " << tvecs[i][1] << ", " << tvecs[i][2] << "]" << std::endl;
+    }
+
+    // Draw detected markers and their axes
+    cv::aruco::drawDetectedMarkers(InputImage, markerCorners, markerIds);
+    for (size_t i = 0; i < markerIds.size(); i++) {
+        cv::drawFrameAxes(InputImage, cameraMatrix, distCoeffs, rvecs[i], tvecs[i], markerLength * 1.5f, 2);
+    }
+
+    // Display the image with detected markers and axes
+    cv::namedWindow("Detected ArUco markers and pose", cv::WINDOW_NORMAL);
+    cv::imshow("Detected ArUco markers and pose", InputImage);
 
     waitKey(0);
 
