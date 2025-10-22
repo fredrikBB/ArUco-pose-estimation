@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8)
 project( ArUcoDetection )
 find_package( OpenCV REQUIRED )
-add_executable( ArUcoDetection main.cpp )
-target_link_libraries( ArUcoDetection ${OpenCV_LIBS} )
+add_executable( output/ArUcoDetection main.cpp )
+target_link_libraries( output/ArUcoDetection ${OpenCV_LIBS} )
