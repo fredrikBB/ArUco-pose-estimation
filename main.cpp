@@ -7,19 +7,27 @@ using namespace cv;
 
 int main(int argc, char** argv )
 {
-    if ( argc != 2 )
+    Mat InputImage;
+    bool SHOW_IMAGE = false;
+    bool PRINT_DATA = false;
+
+    if ( argc < 2 )
     {
-        printf("usage: ArUcoDetection.out <Image_Path>\n");
+        printf("usage: ArUcoDetection.out <Image_Path> <Show_Image?> <Print_Data?>\n");
         return -1;
     }
 
-    Mat InputImage;
     InputImage = imread( argv[1], 1 );
-
-    if ( !InputImage.data )
-    {
+    if ( !InputImage.data ) {
         printf("No image data \n");
         return -1;
+    }
+
+    if (argc >= 3) {
+        SHOW_IMAGE = (std::string(argv[2]) == "true");
+    }
+    if (argc >= 4) {
+        PRINT_DATA = (std::string(argv[3]) == "true");
     }
 
     /**************************************************************************************/
@@ -36,12 +44,14 @@ int main(int argc, char** argv )
     detector.detectMarkers(InputImage, markerCorners, markerIds, rejectedCandidates);
 
     // Print out detected marker ids sorted
-    std::sort(markerIds.begin(), markerIds.end());
-    std::cout << "Detected marker ids: ";
-    for (auto i : markerIds)
-        std::cout << i << " ";
-    std::cout << std::endl;
-    std::cout << "Number of detected markers: " << markerIds.size() << std::endl;
+    if (PRINT_DATA) {
+        std::sort(markerIds.begin(), markerIds.end());
+        std::cout << "Detected marker ids: ";
+        for (auto i : markerIds)
+            std::cout << i << " ";
+        std::cout << std::endl;
+        std::cout << "Number of detected markers: " << markerIds.size() << std::endl;
+    }
 
     /**************************************************************************************/
     /************************************Pose Estimation***********************************/
@@ -66,22 +76,23 @@ int main(int argc, char** argv )
     }
 
     // Print out pose estimation results
-    for (size_t i = 0; i < markerIds.size(); i++) {
-        std::cout << "Rotation Vector: [" << rvecs[i][0] << ", " << rvecs[i][1] << ", " << rvecs[i][2] << "]" << std::endl;
-        std::cout << "Translation Vector: [" << tvecs[i][0] << ", " << tvecs[i][1] << ", " << tvecs[i][2] << "]" << std::endl;
-    }
-
-    // Draw detected markers and their axes
-    cv::aruco::drawDetectedMarkers(InputImage, markerCorners, markerIds);
-    for (size_t i = 0; i < markerIds.size(); i++) {
-        cv::drawFrameAxes(InputImage, cameraMatrix, distCoeffs, rvecs[i], tvecs[i], markerLength * 1.5f, 2);
+    if (PRINT_DATA) {
+        for (size_t i = 0; i < markerIds.size(); i++) {
+            std::cout << "Rotation Vector: [" << rvecs[i][0] << ", " << rvecs[i][1] << ", " << rvecs[i][2] << "]" << std::endl;
+            std::cout << "Translation Vector: [" << tvecs[i][0] << ", " << tvecs[i][1] << ", " << tvecs[i][2] << "]" << std::endl;
+        }
     }
 
     // Display the image with detected markers and axes
-    cv::namedWindow("Detected ArUco markers and pose", cv::WINDOW_NORMAL);
-    cv::imshow("Detected ArUco markers and pose", InputImage);
-
-    waitKey(0);
-
+    if (SHOW_IMAGE) {
+        cv::aruco::drawDetectedMarkers(InputImage, markerCorners, markerIds);
+        for (size_t i = 0; i < markerIds.size(); i++) {
+            cv::drawFrameAxes(InputImage, cameraMatrix, distCoeffs, rvecs[i], tvecs[i], markerLength * 1.5f, 2);
+        }
+        cv::namedWindow("Detected ArUco markers and pose", cv::WINDOW_NORMAL);
+        cv::imshow("Detected ArUco markers and pose", InputImage);
+        waitKey(0);
+    }
+    
     return 0;
 }
