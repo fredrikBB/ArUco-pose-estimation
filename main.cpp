@@ -11,13 +11,13 @@ int main(int argc, char** argv )
 
     if ( argc < 2 )
     {
-        printf("usage: ArUcoDetection.out <Image_Path> <Show_Image?> <Print_Data?>\n");
+        std::cout << "usage: ArUcoDetection.out <Image_Path> <Show_Image?> <Print_Data?>\n";
         return -1;
     }
 
     InputImage = imread( argv[1], 1 );
     if ( !InputImage.data ) {
-        printf("No image data \n");
+        std::cout << "No image data \n";
         return -1;
     }
 
