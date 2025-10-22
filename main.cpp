@@ -3,8 +3,6 @@
 
 #include "camera_parameters.h"
 
-using namespace cv;
-
 int main(int argc, char** argv )
 {
     Mat InputImage;
