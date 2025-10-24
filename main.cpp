@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <opencv2/opencv.hpp>
+#include <opencv2/aruco.hpp>
 
 #include "camera_parameters.h"
 
@@ -34,12 +35,11 @@ int main(int argc, char** argv )
 
     std::vector<int> markerIds;
     std::vector<std::vector<cv::Point2f>> markerCorners, rejectedCandidates;
-    cv::aruco::DetectorParameters detectorParams = cv::aruco::DetectorParameters();
-    cv::aruco::Dictionary dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_6X6_50);
-    cv::aruco::ArucoDetector detector(dictionary, detectorParams);
+    cv::Ptr<cv::aruco::DetectorParameters> detectorParams = cv::aruco::DetectorParameters::create();
+    cv::Ptr<cv::aruco::Dictionary> dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_6X6_50);
 
     // ArUco detection
-    detector.detectMarkers(InputImage, markerCorners, markerIds, rejectedCandidates);
+    cv::aruco::detectMarkers(InputImage, dictionary, markerCorners, markerIds, detectorParams, rejectedCandidates);
 
     // Print out detected marker ids sorted
     if (PRINT_DATA) {
