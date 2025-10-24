@@ -1,5 +1,7 @@
 # Prerequisites
-* Assummes the host has installed OpenCV (See https://docs.opencv.org/4.x/d7/d9f/tutorial_linux_install.html).
+* Assummes the host has installed OpenCV 
+    * Installing libopencv-dev using apt should be enough
+    * Alternatively one can download and build OpenCV straight from the source (See https://docs.opencv.org/4.x/d7/d9f/tutorial_linux_install.html for a guide on how to do that).
 * CMake
 * gcc
 
